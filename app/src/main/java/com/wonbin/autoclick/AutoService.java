@@ -54,7 +54,7 @@ public class AutoService extends AccessibilityService {
             } else if (PLAY.equals(action)) {
                 mX = intent.getIntExtra("x", 0);
                 mY = intent.getIntExtra("y", 0);
-                new CountDownTimer(mInterval, 1 * 1000) {
+                new CountDownTimer(mInterval, 3 * 1000) {
                     @Override
                     public void onTick(long millisUntilFinished) {
                         Toast.makeText(getBaseContext(), "还有" + millisUntilFinished / 1000 + "秒", Toast.LENGTH_SHORT).show();
