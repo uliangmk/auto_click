@@ -2,5 +2,6 @@
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
     android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackAllMask"
+    android:canPerformGestures="true"
     android:canRetrieveWindowContent="true"
-    android:canPerformGestures="true"/>
+    android:packageNames="com.tencent.mm" />

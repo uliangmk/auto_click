@@ -26,6 +26,8 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
     private FloatingManager mWindowManager;
     public String mCurState;
 
+    public int mX, mY;
+
     public FloatingView(Context context) {
         super(context);
         mContext = context.getApplicationContext();
@@ -99,14 +101,7 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         switch (view.getId()) {
             case R.id.play:
                 mCurState = AutoService.PLAY;
-                int[] location = new int[2];
-                mView.getLocationOnScreen(location);
                 intent.putExtra(AutoService.ACTION, AutoService.PLAY);
-                intent.putExtra(AutoService.M_X, location[0] - 1);
-                intent.putExtra(AutoService.M_Y, location[1] - 1);
-
-                intent.putExtra(AutoService.T_X, location[1] - 1);
-                intent.putExtra(AutoService.T_Y, location[1] - 1);
                 break;
             case R.id.stop:
                 mCurState = AutoService.STOP;
@@ -120,4 +115,13 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         }
         getContext().startService(intent);
     }
+
+    public void updatePosition() {
+        int[] location = new int[2];
+        mView.getLocationOnScreen(location);
+        //必须减1像素不然点击到了自己window
+        mX = location[0] - 1;
+        mY = location[1] - 1;
+    }
+
 }
