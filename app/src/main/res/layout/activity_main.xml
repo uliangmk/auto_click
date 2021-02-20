@@ -44,6 +44,35 @@
     </RadioGroup>
 
     <LinearLayout
+        android:visibility="gone"
+        android:id="@+id/swipe_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <EditText
+            android:id="@+id/to_x"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="正数左滑"
+            android:inputType="numberSigned"
+            android:lines="1"
+            android:minEms="3"
+            android:textSize="12sp" />
+
+        <EditText
+            android:id="@+id/to_y"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:hint="正数上滑"
+            android:inputType="numberSigned"
+            android:lines="1"
+            android:minEms="3"
+            android:textSize="12sp" />
+    </LinearLayout>
+
+
+    <LinearLayout
         android:id="@+id/text"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

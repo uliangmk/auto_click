@@ -45,13 +45,11 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
     public void show() {
         mParams = new WindowManager.LayoutParams();
         mParams.gravity = Gravity.CENTER;
-        //总是出现在应用程序窗口之上
         if (Build.VERSION.SDK_INT >= 26) {
             mParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
         } else {
             mParams.type = WindowManager.LayoutParams.TYPE_SYSTEM_ALERT;
         }
-        //设置图片格式，效果为背景透明
         mParams.format = PixelFormat.RGBA_8888;
         mParams.flags = WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE | WindowManager.LayoutParams.FLAG_NOT_TOUCH_MODAL |
                 WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN | WindowManager.LayoutParams.FLAG_LAYOUT_INSET_DECOR |
@@ -59,7 +57,11 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         mParams.width = LayoutParams.WRAP_CONTENT;
         mParams.height = LayoutParams.WRAP_CONTENT;
         boolean result = mWindowManager.addView(mView, mParams);
-        Toast.makeText(getContext(), "浮窗显示:" + result, Toast.LENGTH_LONG).show();
+        if (result) {
+            Toast.makeText(getContext(), "点击开始，并将左上角黄点对准", Toast.LENGTH_LONG).show();
+        } else {
+            Toast.makeText(getContext(), "无法工作：没开启小窗权限", Toast.LENGTH_LONG).show();
+        }
         mView.setOnTouchListener(mOnTouchListener);
     }
 
@@ -100,8 +102,11 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
                 int[] location = new int[2];
                 mView.getLocationOnScreen(location);
                 intent.putExtra(AutoService.ACTION, AutoService.PLAY);
-                intent.putExtra("x", location[0] - 1);
-                intent.putExtra("y", location[1] - 1);
+                intent.putExtra(AutoService.M_X, location[0] - 1);
+                intent.putExtra(AutoService.M_Y, location[1] - 1);
+
+                intent.putExtra(AutoService.T_X, location[1] - 1);
+                intent.putExtra(AutoService.T_Y, location[1] - 1);
                 break;
             case R.id.stop:
                 mCurState = AutoService.STOP;
