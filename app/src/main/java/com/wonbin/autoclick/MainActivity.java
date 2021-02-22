@@ -26,7 +26,7 @@ import org.w3c.dom.Text;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private Button mStart;
+    private Button mStart,mStop;
     TextView per1, per2;
     private EditText mInterval, swipeX, swipeY;
     private View swipeLayout;
@@ -37,6 +37,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
         mStart = findViewById(R.id.start);
+        mStop = findViewById(R.id.stop);
         per1 = findViewById(R.id.permission_1);
         per2 = findViewById(R.id.permission_2);
         mInterval = findViewById(R.id.interval);
@@ -45,6 +46,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mCheckMode = findViewById(R.id.check_mode);
         swipeLayout = findViewById(R.id.swipe_layout);
         mStart.setOnClickListener(this);
+        mStop.setOnClickListener(this);
         per1.setOnClickListener(this);
         per2.setOnClickListener(this);
 
@@ -72,6 +74,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.putExtra(AutoService.T_Y, getEditInt(swipeY));
                 int id = mCheckMode.getCheckedRadioButtonId();
                 intent.putExtra(AutoService.MODE, id == R.id.swipe ? AutoService.SWIPE : AutoService.TAP);
+                startService(intent);
+                finish();
+                break;
+            case R.id.stop:
+                intent.putExtra(AutoService.ACTION, AutoService.STOP_SERVICE);
                 startService(intent);
                 finish();
                 break;

@@ -23,9 +23,9 @@ import java.util.logging.Logger;
 public class AutoService extends AccessibilityService {
 
     public static int tipsInterval = 3 * 1000;
-
     public static final String ACTION = "action";
     public static final String SHOW = "show";
+    public static final String STOP_SERVICE = "STOP_SERVICE";
     public static final String HIDE = "hide";
     public static final String PLAY = "play";
     public static final String STOP = "stop";
@@ -37,13 +37,11 @@ public class AutoService extends AccessibilityService {
     public static final String T_X = "T_X";
     public static final String T_Y = "T_Y";
 
-
     private FloatingView mFloatingView;
     private int mInterval;
     private int mX, tX;
     private int mY, tY;
     private String mMode;
-
     private CountDownTimer timer;
 
     @Override
@@ -80,8 +78,17 @@ public class AutoService extends AccessibilityService {
                 closeTimer();
                 Toast.makeText(getBaseContext(), "已暂停", Toast.LENGTH_SHORT).show();
                 break;
+            case STOP_SERVICE:
+                stopAutoService();
+                break;
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void stopAutoService() {
+        closeTimer();
+        Toast.makeText(getBaseContext(), "关闭服务", Toast.LENGTH_SHORT).show();
+        disableSelf();
     }
 
     private void startClickJob() {
@@ -115,23 +122,27 @@ public class AutoService extends AccessibilityService {
     }
 
     private void playTap(final int x, final int y) {
-        Path path = new Path();
-        path.moveTo(x, y);
-        path.lineTo(x, y);
-        GestureDescription.Builder builder = new GestureDescription.Builder();
-        builder.addStroke(new GestureDescription.StrokeDescription(path, 10L, 10L));
-        GestureDescription gestureDescription = builder.build();
-        dispatchGesture(gestureDescription, new GestureResultCallback() {
-            @Override
-            public void onCompleted(GestureDescription gestureDescription) {
-                super.onCompleted(gestureDescription);
-            }
+        try {
+            Path path = new Path();
+            path.moveTo(x, y);
+            path.lineTo(x, y);
+            GestureDescription.Builder builder = new GestureDescription.Builder();
+            builder.addStroke(new GestureDescription.StrokeDescription(path, 10L, 10L));
+            GestureDescription gestureDescription = builder.build();
+            dispatchGesture(gestureDescription, new GestureResultCallback() {
+                @Override
+                public void onCompleted(GestureDescription gestureDescription) {
+                    super.onCompleted(gestureDescription);
+                }
 
-            @Override
-            public void onCancelled(GestureDescription gestureDescription) {
-                super.onCancelled(gestureDescription);
-            }
-        }, null);
+                @Override
+                public void onCancelled(GestureDescription gestureDescription) {
+                    super.onCancelled(gestureDescription);
+                }
+            }, null);
+        } catch (Exception e) {
+            Toast.makeText(getBaseContext(), "异常，位置不对", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void playSwipe(int fromX, int fromY, int toX, int toY) {
@@ -154,6 +165,7 @@ public class AutoService extends AccessibilityService {
                 }
             }, null);
         } catch (Exception e) {
+            Toast.makeText(getBaseContext(), "异常，滑动位置不对", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -174,7 +186,7 @@ public class AutoService extends AccessibilityService {
             for (CharSequence text : texts) {
                 String content = text.toString();
                 //通知栏包括威信红包文字
-                if (content.contains("一拉贼怕")) {
+                if (content.contains("elazipa") && content.contains("开")) {
                     needOpenPower();
                     Toast.makeText(getBaseContext(), "收到任务", Toast.LENGTH_SHORT).show();
                     mInterval = 10 * 1000;
