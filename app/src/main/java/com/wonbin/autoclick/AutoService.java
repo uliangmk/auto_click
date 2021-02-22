@@ -189,7 +189,7 @@ public class AutoService extends AccessibilityService {
                 if (content.contains("elazipa") && content.contains("开")) {
                     needOpenPower();
                     Toast.makeText(getBaseContext(), "收到任务", Toast.LENGTH_SHORT).show();
-                    mInterval = 10 * 1000;
+                    mInterval = 50 * 1000;
                     tipsInterval = 1000;
                     startClickJob();
                 }
