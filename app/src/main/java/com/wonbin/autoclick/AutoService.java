@@ -3,9 +3,6 @@ package com.wonbin.autoclick;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
-import android.app.KeyguardManager;
-import android.app.Notification;
-import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Path;
@@ -17,18 +14,20 @@ import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
 import java.util.List;
-import java.util.logging.Logger;
+import java.util.Queue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class AutoService extends AccessibilityService {
 
-    public static int tipsInterval = 3 * 1000;
+
+    public static final int NOTICE_INTERVAL = 3 * 1000;
     public static final String ACTION = "action";
     public static final String SHOW = "show";
-    public static final String STOP_SERVICE = "STOP_SERVICE";
+    public static final String STOP = "STOP_SERVICE";
     public static final String HIDE = "hide";
     public static final String PLAY = "play";
-    public static final String STOP = "stop";
+    public static final String ADD = "ADD";
 
     public static final String MODE = "mode";
     public static final String TAP = "tap";
@@ -39,10 +38,12 @@ public class AutoService extends AccessibilityService {
 
     private FloatingView mFloatingView;
     private int mInterval;
-    private int mX, tX;
-    private int mY, tY;
+    private int tipsInterval = 3 * 1000;
+    private int tX;
+    private int tY;
     private String mMode;
     private CountDownTimer timer;
+    private Queue<WorkPosition> workQueue = new LinkedBlockingQueue<>();
 
     @Override
     public void onCreate() {
@@ -72,13 +73,18 @@ public class AutoService extends AccessibilityService {
                 closeTimer();
                 break;
             case PLAY:
+                if (workQueue.size() == 0) {
+                    mFloatingView.updatePosition();
+                    workQueue.offer(new WorkPosition(mFloatingView.mX + 1, mFloatingView.mY + 1));
+                }
                 startClickJob();
                 break;
-            case STOP:
-                closeTimer();
-                Toast.makeText(getBaseContext(), "已暂停", Toast.LENGTH_SHORT).show();
+            case ADD:
+                mFloatingView.updatePosition();
+                workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
+                Toast.makeText(getBaseContext(), "当前任务数：" + workQueue.size(), Toast.LENGTH_SHORT).show();
                 break;
-            case STOP_SERVICE:
+            case STOP:
                 stopAutoService();
                 break;
         }
@@ -92,9 +98,16 @@ public class AutoService extends AccessibilityService {
     }
 
     private void startClickJob() {
-        mFloatingView.updatePosition();
-        mX = mFloatingView.mX;
-        mY = mFloatingView.mY;
+        if (workQueue == null) {
+            return;
+        }
+        WorkPosition currentPosition = workQueue.poll();
+        if (currentPosition == null) {
+            return;
+        }
+
+        mFloatingView.setFloatPosition(currentPosition);
+
         closeTimer();
         timer = new CountDownTimer(mInterval, tipsInterval) {
             @Override
@@ -105,11 +118,11 @@ public class AutoService extends AccessibilityService {
             @Override
             public void onFinish() {
                 if (SWIPE.equals(mMode)) {
-                    playSwipe(mX, mY, mX - tX, mY - tY);
+                    playSwipe();
                 } else {
-                    playTap(mX, mY);
+                    playTap();
                 }
-                mFloatingView.mCurState = AutoService.STOP;
+                startClickJob();
             }
         }.start();
     }
@@ -121,8 +134,13 @@ public class AutoService extends AccessibilityService {
         timer.cancel();
     }
 
-    private void playTap(final int x, final int y) {
+    private void playTap() {
         try {
+            mFloatingView.updatePosition();
+            //必须减1像素不然点击到了自己window
+            int x = mFloatingView.mX - 1;
+            int y = mFloatingView.mY - 1;
+            Log.i("ulog", " 点击位置-- " + x + " " + y);
             Path path = new Path();
             path.moveTo(x, y);
             path.lineTo(x, y);
@@ -137,6 +155,7 @@ public class AutoService extends AccessibilityService {
 
                 @Override
                 public void onCancelled(GestureDescription gestureDescription) {
+                    Toast.makeText(getBaseContext(), "点击中断", Toast.LENGTH_SHORT).show();
                     super.onCancelled(gestureDescription);
                 }
             }, null);
@@ -145,8 +164,14 @@ public class AutoService extends AccessibilityService {
         }
     }
 
-    private void playSwipe(int fromX, int fromY, int toX, int toY) {
+    private void playSwipe() {
         try {
+            mFloatingView.updatePosition();
+            int fromX = mFloatingView.mX;
+            int fromY = mFloatingView.mY;
+            int toX = mFloatingView.mX - tX;
+            int toY = mFloatingView.mY - tY;
+
             Path path = new Path();
             path.moveTo(fromX, fromY);
             path.lineTo(toX, toY);
@@ -189,8 +214,12 @@ public class AutoService extends AccessibilityService {
                 if (content.contains("elazipa") && content.contains("开")) {
                     needOpenPower();
                     Toast.makeText(getBaseContext(), "收到任务", Toast.LENGTH_SHORT).show();
-                    mInterval = 50 * 1000;
+                    mInterval = NOTICE_INTERVAL;
                     tipsInterval = 1000;
+                    if (workQueue.size() == 0) {
+                        mFloatingView.updatePosition();
+                        workQueue.offer(new WorkPosition(mFloatingView.mX + 1, mFloatingView.mY + 1));
+                    }
                     startClickJob();
                 }
             }
@@ -216,6 +245,16 @@ public class AutoService extends AccessibilityService {
     @Override
     public void onInterrupt() {
 
+    }
+
+    public class WorkPosition {
+        public int workX;
+        public int workY;
+
+        public WorkPosition(int x, int y) {
+            workX = x;
+            workY = y;
+        }
     }
 
 }

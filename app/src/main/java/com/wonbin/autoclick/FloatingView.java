@@ -19,12 +19,11 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
     private Context mContext;
     private View mView;
     private ImageView mPlayView;
-    private ImageView mStopView;
+    private ImageView mAddView;
     private ImageView mCloseView;
     private int mTouchStartX, mTouchStartY;//手指按下时坐标
     private WindowManager.LayoutParams mParams;
     private FloatingManager mWindowManager;
-    public String mCurState;
 
     public int mX, mY;
 
@@ -35,10 +34,10 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         mView = mLayoutInflater.inflate(R.layout.floating_view, null);
 
         mPlayView = (ImageView) mView.findViewById(R.id.play);
-        mStopView = (ImageView) mView.findViewById(R.id.stop);
+        mAddView = (ImageView) mView.findViewById(R.id.add);
         mCloseView = (ImageView) mView.findViewById(R.id.close);
         mPlayView.setOnClickListener(this);
-        mStopView.setOnClickListener(this);
+        mAddView.setOnClickListener(this);
         mCloseView.setOnClickListener(this);
 
         mWindowManager = FloatingManager.getInstance(mContext);
@@ -46,7 +45,7 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
 
     public void show() {
         mParams = new WindowManager.LayoutParams();
-        mParams.gravity = Gravity.CENTER;
+        mParams.gravity = Gravity.LEFT | Gravity.TOP;
         if (Build.VERSION.SDK_INT >= 26) {
             mParams.type = WindowManager.LayoutParams.TYPE_APPLICATION_OVERLAY;
         } else {
@@ -80,13 +79,12 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
                     mTouchStartY = (int) event.getRawY();
                     break;
                 case MotionEvent.ACTION_MOVE:
-                    if (!AutoService.PLAY.equals(mCurState)) {
-                        mParams.x += (int) event.getRawX() - mTouchStartX;
-                        mParams.y += (int) event.getRawY() - mTouchStartY;//相对于屏幕左上角的位置
-                        mWindowManager.updateView(mView, mParams);
-                        mTouchStartX = (int) event.getRawX();
-                        mTouchStartY = (int) event.getRawY();
-                    }
+                    mParams.x += (int) event.getRawX() - mTouchStartX;
+                    mParams.y += (int) event.getRawY() - mTouchStartY;//相对于屏幕左上角的位置
+//                    Log.i("ulog", " -- " + mParams.x + " " + mParams.y);
+                    mWindowManager.updateView(mView, mParams);
+                    mTouchStartX = (int) event.getRawX();
+                    mTouchStartY = (int) event.getRawY();
                     break;
                 case MotionEvent.ACTION_UP:
                     break;
@@ -100,12 +98,10 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         Intent intent = new Intent(getContext(), AutoService.class);
         switch (view.getId()) {
             case R.id.play:
-                mCurState = AutoService.PLAY;
                 intent.putExtra(AutoService.ACTION, AutoService.PLAY);
                 break;
-            case R.id.stop:
-                mCurState = AutoService.STOP;
-                intent.putExtra(AutoService.ACTION, AutoService.STOP);
+            case R.id.add:
+                intent.putExtra(AutoService.ACTION, AutoService.ADD);
                 break;
             case R.id.close:
                 intent.putExtra(AutoService.ACTION, AutoService.HIDE);
@@ -119,9 +115,16 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
     public void updatePosition() {
         int[] location = new int[2];
         mView.getLocationOnScreen(location);
-        //必须减1像素不然点击到了自己window
-        mX = location[0] - 1;
-        mY = location[1] - 1;
+        mX = location[0];
+        mY = location[1];
+        Log.e("ulog", "刷新位置 -- " + location[0] + " " + location[1]);
+    }
+
+    public void setFloatPosition(AutoService.WorkPosition position) {
+        mParams.x = position.workX;
+        mParams.y = position.workY;
+        Log.w("ulog", " --设置位置 " + mParams.x + " " + mParams.y);
+        mWindowManager.updateView(mView, mParams);
     }
 
 }

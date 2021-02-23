@@ -23,7 +23,7 @@
             android:src="@drawable/play" />
 
         <ImageView
-            android:id="@+id/stop"
+            android:id="@+id/add"
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_weight="1"
