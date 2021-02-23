@@ -20,8 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class AutoService extends AccessibilityService {
 
-
-    public static final int NOTICE_INTERVAL = 3 * 1000;
+    public static final int NOTICE_INTERVAL = 40 * 1000;
     public static final String ACTION = "action";
     public static final String SHOW = "show";
     public static final String STOP = "STOP_SERVICE";
@@ -105,9 +104,7 @@ public class AutoService extends AccessibilityService {
         if (currentPosition == null) {
             return;
         }
-
         mFloatingView.setFloatPosition(currentPosition);
-
         closeTimer();
         timer = new CountDownTimer(mInterval, tipsInterval) {
             @Override
