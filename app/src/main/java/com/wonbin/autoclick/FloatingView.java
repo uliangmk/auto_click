@@ -4,6 +4,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.graphics.PixelFormat;
 import android.os.Build;
+import android.util.DisplayMetrics;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -81,7 +82,6 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
                 case MotionEvent.ACTION_MOVE:
                     mParams.x += (int) event.getRawX() - mTouchStartX;
                     mParams.y += (int) event.getRawY() - mTouchStartY;//相对于屏幕左上角的位置
-//                    Log.i("ulog", " -- " + mParams.x + " " + mParams.y);
                     mWindowManager.updateView(mView, mParams);
                     mTouchStartX = (int) event.getRawX();
                     mTouchStartY = (int) event.getRawY();
@@ -125,6 +125,20 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         mParams.y = position.workY;
         Log.w("ulog", " --设置位置 " + mParams.x + " " + mParams.y);
         mWindowManager.updateView(mView, mParams);
+    }
+
+    public int getScreenWidth() {
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        mWindowManager.mWindowManager.getDefaultDisplay().getMetrics(outMetrics);
+        int widthPixels = outMetrics.widthPixels;
+        return widthPixels;
+    }
+
+    public int getScreenHeight() {
+        DisplayMetrics outMetrics = new DisplayMetrics();
+        mWindowManager.mWindowManager.getDefaultDisplay().getMetrics(outMetrics);
+        int heightPixels = outMetrics.heightPixels;
+        return heightPixels;
     }
 
 }

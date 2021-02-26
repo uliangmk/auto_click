@@ -7,7 +7,7 @@ import android.view.WindowManager;
 
 
 public class FloatingManager {
-    private WindowManager mWindowManager;
+    public WindowManager mWindowManager;
     private static FloatingManager mInstance;
     private Context mContext;
 

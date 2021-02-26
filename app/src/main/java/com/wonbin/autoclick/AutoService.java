@@ -20,7 +20,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class AutoService extends AccessibilityService {
 
-    public static final int NOTICE_INTERVAL = 40 * 1000;
+    public static final int NOTICE_INTERVAL = 4 * 1000;
     public static final String ACTION = "action";
     public static final String SHOW = "show";
     public static final String STOP = "STOP_SERVICE";
@@ -74,7 +74,7 @@ public class AutoService extends AccessibilityService {
             case PLAY:
                 if (workQueue.size() == 0) {
                     mFloatingView.updatePosition();
-                    workQueue.offer(new WorkPosition(mFloatingView.mX + 1, mFloatingView.mY + 1));
+                    workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
                 }
                 startClickJob();
                 break;
@@ -164,10 +164,10 @@ public class AutoService extends AccessibilityService {
     private void playSwipe() {
         try {
             mFloatingView.updatePosition();
-            int fromX = mFloatingView.mX;
-            int fromY = mFloatingView.mY;
-            int toX = mFloatingView.mX - tX;
-            int toY = mFloatingView.mY - tY;
+            int fromX = mFloatingView.mX - 1;
+            int fromY = mFloatingView.mY - 1;
+            int toX = mFloatingView.mX - tX - 1;
+            int toY = mFloatingView.mY - tY - 1;
 
             Path path = new Path();
             path.moveTo(fromX, fromY);
@@ -196,7 +196,6 @@ public class AutoService extends AccessibilityService {
         int eventType = event.getEventType();
         switch (eventType) {
             case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
-                Log.i("ulog", " -- " + "通知栏 " + eventType);
                 dealNotificationChange(event);
                 break;
         }
@@ -211,15 +210,39 @@ public class AutoService extends AccessibilityService {
                 if (content.contains("elazipa") && content.contains("开")) {
                     needOpenPower();
                     Toast.makeText(getBaseContext(), "收到任务", Toast.LENGTH_SHORT).show();
+                    dealPositionChange(content);
                     mInterval = NOTICE_INTERVAL;
                     tipsInterval = 1000;
                     if (workQueue.size() == 0) {
                         mFloatingView.updatePosition();
-                        workQueue.offer(new WorkPosition(mFloatingView.mX + 1, mFloatingView.mY + 1));
+                        workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
                     }
                     startClickJob();
                 }
             }
+        }
+    }
+
+    private void dealPositionChange(String content) {
+        try {
+            int indexX = content.indexOf("%");
+            String sx = content.substring(indexX + 1, indexX + 3);
+            int x = Integer.parseInt(sx);
+            String left = content.substring(indexX + 1);
+            int indexY = left.indexOf("%");
+            String sy = left.substring(indexY + 1, indexY + 3);
+            int y = Integer.parseInt(sy);
+
+            int screenWidth = mFloatingView.getScreenWidth();
+            int screenHeight = mFloatingView.getScreenHeight();
+            int rx = screenWidth * x / 100;
+            int ry = screenHeight * y / 100;
+
+            WorkPosition currentPosition = new WorkPosition(rx, ry);
+            mFloatingView.setFloatPosition(currentPosition);
+            workQueue.offer(new WorkPosition(rx, ry));
+        } catch (Exception e) {
+            Toast.makeText(getBaseContext(), "异常，配置坐标不对", Toast.LENGTH_SHORT).show();
         }
     }
 
@@ -232,7 +255,7 @@ public class AutoService extends AccessibilityService {
             String tag = "";
             PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
             pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, tag);
-            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "ulogp");
+            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "ulog");
             wl.acquire();
         } catch (Exception e) {
             e.printStackTrace();

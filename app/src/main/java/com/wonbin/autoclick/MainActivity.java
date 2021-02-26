@@ -89,7 +89,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         try {
             re = Integer.parseInt(swipeY.getText().toString());
         } catch (Exception e) {
-            Log.e("ulog", " -- " + e);
             re = 0;
         }
         return re;
