@@ -3,6 +3,7 @@ package com.wonbin.autoclick;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
+import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Path;
@@ -20,7 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class AutoService extends AccessibilityService {
 
-    public static final int NOTICE_INTERVAL = 4 * 1000;
+    public static final int NOTICE_INTERVAL = 40 * 1000;
     public static final String ACTION = "action";
     public static final String SHOW = "show";
     public static final String STOP = "STOP_SERVICE";
@@ -43,6 +44,8 @@ public class AutoService extends AccessibilityService {
     private String mMode;
     private CountDownTimer timer;
     private Queue<WorkPosition> workQueue = new LinkedBlockingQueue<>();
+    private PowerManager.WakeLock wl;
+
 
     @Override
     public void onCreate() {
@@ -98,10 +101,12 @@ public class AutoService extends AccessibilityService {
 
     private void startClickJob() {
         if (workQueue == null) {
+            needOpenPower(false);
             return;
         }
         WorkPosition currentPosition = workQueue.poll();
         if (currentPosition == null) {
+            needOpenPower(false);
             return;
         }
         mFloatingView.setFloatPosition(currentPosition);
@@ -208,7 +213,7 @@ public class AutoService extends AccessibilityService {
                 String content = text.toString();
                 //通知栏包括威信红包文字
                 if (content.contains("elazipa") && content.contains("开")) {
-                    needOpenPower();
+                    needOpenPower(true);
                     Toast.makeText(getBaseContext(), "收到任务", Toast.LENGTH_SHORT).show();
                     dealPositionChange(content);
                     mInterval = NOTICE_INTERVAL;
@@ -250,13 +255,19 @@ public class AutoService extends AccessibilityService {
      * 是否需要锁屏打开屏幕
      */
     @SuppressLint("InvalidWakeLockTag")
-    private void needOpenPower() {
+    private void needOpenPower(boolean open) {
         try {
-            String tag = "";
-            PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
-            pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, tag);
-            PowerManager.WakeLock wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "ulog");
-            wl.acquire();
+            if (wl == null) {
+                PowerManager pm = (PowerManager) getApplicationContext().getSystemService(Context.POWER_SERVICE);
+                wl = pm.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP | PowerManager.SCREEN_DIM_WAKE_LOCK, "tag");
+            }
+            if (open) {
+                wl.acquire();
+            } else {
+                if (wl.isHeld()) {
+                    wl.release();
+                }
+            }
         } catch (Exception e) {
             e.printStackTrace();
         }
