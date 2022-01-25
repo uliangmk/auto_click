@@ -64,6 +64,7 @@ public class AutoService extends AccessibilityService {
         }
         switch (action) {
             case SHOW:
+                LogManager.getInstance().saveLogTxt("\n start:"  + Utils.getDateToString());
                 mInterval = intent.getIntExtra("interval", 16) * 1000;
                 tX = intent.getIntExtra(T_X, 0);
                 tY = intent.getIntExtra(T_Y, 0);

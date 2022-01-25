@@ -14,6 +14,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Queue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.LinkedBlockingQueue;
 
 /**
@@ -23,7 +25,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 public class LogManager {
     private Queue<String> queue;
     private static LogManager INSTANCE;
-    private Thread thread;
+    private ExecutorService singleThreadExecutor;
     public static final String ADDRESS_FILE = "auto_click_log.txt";
 
     public static LogManager getInstance() {
@@ -41,26 +43,8 @@ public class LogManager {
     public LogManager() {
         appDir = Environment.getExternalStorageDirectory();
         addressTxt = new File(appDir, ADDRESS_FILE);
-
+        singleThreadExecutor = Executors.newSingleThreadExecutor();
         queue = new LinkedBlockingQueue();
-        thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                while (true) {
-                    if (queue == null) {
-                        Log.e("ulog"," queue == null"+" ");
-                        return;
-                    }
-                    String msg = queue.poll();
-                    if (TextUtils.isEmpty(msg)) {
-                        Log.e("ulog"," isEmpty"+" ");
-                        continue;
-                    }
-                    saveLogTxt(msg);
-                }
-            }
-        });
-        thread.start();
     }
 
 
@@ -69,6 +53,19 @@ public class LogManager {
             return false;
         }
         queue.offer(msg);
+        singleThreadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                if (queue == null) {
+                    return;
+                }
+                String msg = queue.poll();
+                if (TextUtils.isEmpty(msg)) {
+                    return;
+                }
+                saveLogTxt(msg);
+            }
+        });
         return true;
     }
 
@@ -86,10 +83,9 @@ public class LogManager {
             fw.close();
         } catch (Exception e) {
             e.printStackTrace();
-            Log.e("ulog"," 写文件-- Exception"+" ");
+            Log.e("ulog", " 写文件-- Exception" + " ");
         }
     }
-
 
 
 }
