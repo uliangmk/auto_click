@@ -64,7 +64,7 @@ public class AutoService extends AccessibilityService {
         }
         switch (action) {
             case SHOW:
-                LogManager.getInstance().saveLogTxt("\n start:"  + Utils.getDateToString());
+                LogManager.getInstance().saveLogTxt("\r\nstart:"  + Utils.getDateToString());
                 mInterval = intent.getIntExtra("interval", 16) * 1000;
                 tX = intent.getIntExtra(T_X, 0);
                 tY = intent.getIntExtra(T_Y, 0);
@@ -107,11 +107,13 @@ public class AutoService extends AccessibilityService {
         LogManager.getInstance().logMsg("准备开始:" + Utils.getDateToString());
         if (workQueue == null) {
             needOpenPower(false);
+            stopAutoService();
             return;
         }
         WorkPosition currentPosition = workQueue.poll();
         if (currentPosition == null) {
             needOpenPower(false);
+            stopAutoService();
             return;
         }
         LogManager.getInstance().logMsg("有任务开启定时:" + Utils.getDateToString());
@@ -131,7 +133,6 @@ public class AutoService extends AccessibilityService {
                 } else {
                     playTap();
                 }
-                startClickJob();
             }
         }.start();
     }
@@ -161,6 +162,8 @@ public class AutoService extends AccessibilityService {
                 @Override
                 public void onCompleted(GestureDescription gestureDescription) {
                     super.onCompleted(gestureDescription);
+                    LogManager.getInstance().saveLogTxt("点击完成" + "  " + Utils.getDateToString());
+                    startClickJob();
                 }
 
                 @Override
@@ -192,15 +195,18 @@ public class AutoService extends AccessibilityService {
                 @Override
                 public void onCompleted(GestureDescription gestureDescription) {
                     super.onCompleted(gestureDescription);
+                    LogManager.getInstance().saveLogTxt("滑动完成" + "  " + Utils.getDateToString());
+                    startClickJob();
                 }
 
                 @Override
                 public void onCancelled(GestureDescription gestureDescription) {
                     super.onCancelled(gestureDescription);
+                    LogManager.getInstance().saveLogTxt("中断滑动" + "  " + Utils.getDateToString());
                 }
             }, null);
         } catch (Exception e) {
-            Toast.makeText(getBaseContext(), "异常，滑动位置不对", Toast.LENGTH_SHORT).show();
+            LogManager.getInstance().saveLogTxt("异常，滑动位置不对 " + "  " + Utils.getDateToString());
         }
     }
 
