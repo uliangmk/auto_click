@@ -79,12 +79,14 @@ public class AutoService extends AccessibilityService {
                     mFloatingView.updatePosition();
                     workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
                 }
+                LogManager.getInstance().saveLogTxt("首次任务：当前任务数" + workQueue.size() + Utils.getDateToString());
                 startClickJob();
                 break;
             case ADD:
                 mFloatingView.updatePosition();
                 workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
                 Toast.makeText(getBaseContext(), "当前任务数：" + workQueue.size(), Toast.LENGTH_SHORT).show();
+                LogManager.getInstance().saveLogTxt("添加任务：当前任务数" + workQueue.size() + Utils.getDateToString());
                 break;
             case STOP:
                 stopAutoService();
@@ -94,12 +96,14 @@ public class AutoService extends AccessibilityService {
     }
 
     private void stopAutoService() {
+        LogManager.getInstance().saveLogTxt("关闭服务" + Utils.getDateToString());
         closeTimer();
         Toast.makeText(getBaseContext(), "关闭服务", Toast.LENGTH_SHORT).show();
         disableSelf();
     }
 
     private void startClickJob() {
+        LogManager.getInstance().logMsg("准备开始:" + Utils.getDateToString());
         if (workQueue == null) {
             needOpenPower(false);
             return;
@@ -109,6 +113,7 @@ public class AutoService extends AccessibilityService {
             needOpenPower(false);
             return;
         }
+        LogManager.getInstance().logMsg("有任务开启定时:" + Utils.getDateToString());
         mFloatingView.setFloatPosition(currentPosition);
         closeTimer();
         timer = new CountDownTimer(mInterval, tipsInterval) {
@@ -119,6 +124,7 @@ public class AutoService extends AccessibilityService {
 
             @Override
             public void onFinish() {
+                LogManager.getInstance().logMsg("定时结束真正点击:" + Utils.getDateToString());
                 if (SWIPE.equals(mMode)) {
                     playSwipe();
                 } else {
@@ -143,6 +149,7 @@ public class AutoService extends AccessibilityService {
             int x = mFloatingView.mX - 1;
             int y = mFloatingView.mY - 1;
             Log.i("ulog", " 点击位置-- " + x + " " + y);
+            LogManager.getInstance().saveLogTxt("点击位置 " + x + " " + y + "  " + Utils.getDateToString());
             Path path = new Path();
             path.moveTo(x, y);
             path.lineTo(x, y);
@@ -157,12 +164,12 @@ public class AutoService extends AccessibilityService {
 
                 @Override
                 public void onCancelled(GestureDescription gestureDescription) {
-                    Toast.makeText(getBaseContext(), "点击中断", Toast.LENGTH_SHORT).show();
+                    LogManager.getInstance().saveLogTxt("中断点击" + "  " + Utils.getDateToString());
                     super.onCancelled(gestureDescription);
                 }
             }, null);
         } catch (Exception e) {
-            Toast.makeText(getBaseContext(), "异常，位置不对", Toast.LENGTH_SHORT).show();
+            LogManager.getInstance().saveLogTxt("异常，位置不对 " + "  " + Utils.getDateToString());
         }
     }
 
@@ -207,14 +214,15 @@ public class AutoService extends AccessibilityService {
     }
 
     private void dealNotificationChange(AccessibilityEvent event) {
+        LogManager.getInstance().saveLogTxt("收到微信" + "  " + Utils.getDateToString());
         List<CharSequence> texts = event.getText();
         if (!texts.isEmpty()) {
             for (CharSequence text : texts) {
                 String content = text.toString();
                 //通知栏包括威信红包文字
                 if (content.contains("elazipa") && content.contains("开")) {
+                    LogManager.getInstance().saveLogTxt("微信命中" + "  " + Utils.getDateToString());
                     needOpenPower(true);
-                    Toast.makeText(getBaseContext(), "收到任务", Toast.LENGTH_SHORT).show();
                     dealPositionChange(content);
                     mInterval = NOTICE_INTERVAL;
                     tipsInterval = 1000;
@@ -246,8 +254,9 @@ public class AutoService extends AccessibilityService {
             WorkPosition currentPosition = new WorkPosition(rx, ry);
             mFloatingView.setFloatPosition(currentPosition);
             workQueue.offer(new WorkPosition(rx, ry));
+            LogManager.getInstance().saveLogTxt("微信位置" + rx + "  " + ry + Utils.getDateToString());
         } catch (Exception e) {
-            Toast.makeText(getBaseContext(), "异常，配置坐标不对", Toast.LENGTH_SHORT).show();
+            LogManager.getInstance().saveLogTxt("异常，配置坐标不对" + Utils.getDateToString());
         }
     }
 

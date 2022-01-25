@@ -49,6 +49,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 }
             }
         });
+
+        Utils.verifyStoragePermissions(this);
     }
 
     @Override
