@@ -21,7 +21,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class AutoService extends AccessibilityService {
 
-    public static final int NOTICE_INTERVAL = 40 * 1000;
+    public static final long NOTICE_INTERVAL = 40 * 1000;
     public static final String ACTION = "action";
     public static final String SHOW = "show";
     public static final String STOP = "STOP_SERVICE";
@@ -36,8 +36,10 @@ public class AutoService extends AccessibilityService {
     public static final String T_X = "T_X";
     public static final String T_Y = "T_Y";
 
+    public static final String INTERVAL = "interval";
+
     private FloatingView mFloatingView;
-    private int mInterval;
+    private long mInterval;
     private int tipsInterval = 3 * 1000;
     private int tX;
     private int tY;
@@ -65,7 +67,7 @@ public class AutoService extends AccessibilityService {
         switch (action) {
             case SHOW:
                 LogManager.getInstance().saveLogTxt("\r\nstart:"  + Utils.getDateToString());
-                mInterval = intent.getIntExtra("interval", 16) * 1000;
+                mInterval = intent.getLongExtra(INTERVAL, 16) * 1000;
                 tX = intent.getIntExtra(T_X, 0);
                 tY = intent.getIntExtra(T_Y, 0);
                 mMode = intent.getStringExtra(MODE);
@@ -107,13 +109,11 @@ public class AutoService extends AccessibilityService {
         LogManager.getInstance().logMsg("准备开始:" + Utils.getDateToString());
         if (workQueue == null) {
             needOpenPower(false);
-            stopAutoService();
             return;
         }
         WorkPosition currentPosition = workQueue.poll();
         if (currentPosition == null) {
             needOpenPower(false);
-            stopAutoService();
             return;
         }
         LogManager.getInstance().logMsg("有任务开启定时:" + Utils.getDateToString());
@@ -150,7 +150,6 @@ public class AutoService extends AccessibilityService {
             //必须减1像素不然点击到了自己window
             int x = mFloatingView.mX - 1;
             int y = mFloatingView.mY - 1;
-            Log.i("ulog", " 点击位置-- " + x + " " + y);
             LogManager.getInstance().saveLogTxt("点击位置 " + x + " " + y + "  " + Utils.getDateToString());
             Path path = new Path();
             path.moveTo(x, y);

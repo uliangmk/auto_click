@@ -117,13 +117,11 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         mView.getLocationOnScreen(location);
         mX = location[0];
         mY = location[1];
-        Log.e("ulog", "刷新位置 -- " + location[0] + " " + location[1]);
     }
 
     public void setFloatPosition(AutoService.WorkPosition position) {
         mParams.x = position.workX;
         mParams.y = position.workY;
-        Log.w("ulog", " --设置位置 " + mParams.x + " " + mParams.y);
         mWindowManager.updateView(mView, mParams);
     }
 

@@ -14,9 +14,9 @@ import android.widget.TextView;
 
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
-    private Button mStart,mStop;
+    private Button mStart, mStop;
     TextView per1, per2;
-    private EditText mInterval, swipeX, swipeY;
+    private EditText mInterval, mIntervalH, mIntervalM, swipeX, swipeY;
     private View swipeLayout;
     private RadioGroup mCheckMode;
 
@@ -29,6 +29,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         per1 = findViewById(R.id.permission_1);
         per2 = findViewById(R.id.permission_2);
         mInterval = findViewById(R.id.interval);
+        mIntervalH = findViewById(R.id.interval_h);
+        mIntervalM = findViewById(R.id.interval_m);
         swipeX = findViewById(R.id.to_x);
         swipeY = findViewById(R.id.to_y);
         mCheckMode = findViewById(R.id.check_mode);
@@ -59,7 +61,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         switch (v.getId()) {
             case R.id.start:
                 intent.putExtra(AutoService.ACTION, AutoService.SHOW);
-                intent.putExtra("interval", getEditInt(mInterval));
+                intent.putExtra(AutoService.INTERVAL, getTimeSecond());
                 intent.putExtra(AutoService.T_X, getEditInt(swipeX));
                 intent.putExtra(AutoService.T_Y, getEditInt(swipeY));
                 int id = mCheckMode.getCheckedRadioButtonId();
@@ -81,6 +83,23 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 startActivity(intentFloat);
                 break;
         }
+    }
+
+    private long getTimeSecond() {
+        long result = 0L;
+        int timeH = getEditInt(mIntervalH);
+        int timeM = getEditInt(mIntervalM);
+        int time = getEditInt(mInterval);
+        if (timeH != 0) {
+            result = timeH * 60 * 60;
+        }
+        if (timeM != 0) {
+            result = result + timeM * 60;
+        }
+        if (timeH == 0 && timeM == 0) {
+            result = time;
+        }
+        return result;
     }
 
     private int getEditInt(EditText swipeY) {

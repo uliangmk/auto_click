@@ -12,21 +12,23 @@
         android:id="@+id/permission_1"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="30dp"
-        android:text="1.服务权限" />
+        android:layout_marginTop="60dp"
+        android:text="1.服务权限"
+        android:textSize="22sp" />
 
     <TextView
         android:id="@+id/permission_2"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
-        android:text="2.小窗权限" />
+        android:layout_marginTop="40dp"
+        android:text="2.小窗权限"
+        android:textSize="22sp" />
 
     <RadioGroup
         android:id="@+id/check_mode"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="20dp"
+        android:layout_marginTop="40dp"
         android:checkedButton="@id/tap"
         android:orientation="horizontal">
 
@@ -44,11 +46,11 @@
     </RadioGroup>
 
     <LinearLayout
-        android:visibility="gone"
         android:id="@+id/swipe_layout"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <EditText
             android:id="@+id/to_x"
@@ -71,6 +73,48 @@
             android:textSize="12sp" />
     </LinearLayout>
 
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="40dp"
+        android:orientation="horizontal">
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="延时：" />
+
+        <EditText
+            android:id="@+id/interval_h"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:lines="1"
+            android:minEms="3"
+            android:text="0"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="小时" />
+
+        <EditText
+            android:id="@+id/interval_m"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:inputType="number"
+            android:lines="1"
+            android:minEms="3"
+            android:text="0"
+            android:textSize="12sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="分" />
+    </LinearLayout>
 
     <LinearLayout
         android:id="@+id/text"
@@ -103,7 +147,7 @@
         android:id="@+id/start"
         android:layout_width="60dp"
         android:layout_height="25dp"
-        android:layout_marginTop="10dp"
+        android:layout_marginTop="30dp"
         android:background="@drawable/btn_bg"
         android:text="开始"
         android:textColor="#ffffff" />
