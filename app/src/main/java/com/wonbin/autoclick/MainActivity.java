@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -16,7 +15,7 @@ import android.widget.TextView;
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button mStart, mStop;
     TextView per1, per2;
-    private EditText mInterval, mIntervalH, mIntervalM, swipeX, swipeY;
+    private EditText mIntervalS, mIntervalH, mIntervalM, swipeX, swipeY;
     private View swipeLayout;
     private RadioGroup mCheckMode;
 
@@ -28,7 +27,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         mStop = findViewById(R.id.stop);
         per1 = findViewById(R.id.permission_1);
         per2 = findViewById(R.id.permission_2);
-        mInterval = findViewById(R.id.interval);
+        mIntervalS = findViewById(R.id.interval_s);
         mIntervalH = findViewById(R.id.interval_h);
         mIntervalM = findViewById(R.id.interval_m);
         swipeX = findViewById(R.id.to_x);
@@ -89,7 +88,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         long result = 0L;
         int timeH = getEditInt(mIntervalH);
         int timeM = getEditInt(mIntervalM);
-        int time = getEditInt(mInterval);
+        int timeS = getEditInt(mIntervalS);
         if (timeH != 0) {
             result = timeH * 60 * 60;
         }
@@ -97,7 +96,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             result = result + timeM * 60;
         }
         if (timeH == 0 && timeM == 0) {
-            result = time;
+            result = timeS;
         }
         return result;
     }
