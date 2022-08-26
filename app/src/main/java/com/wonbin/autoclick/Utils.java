@@ -13,7 +13,7 @@ import java.util.Date;
  */
 public class Utils {
     private static String MODEL_LOG = "MM-dd HH:mm:ss";
-    private static String MODEL_DATE = "HH:mm:ss";
+    private static String MODEL_DATE = "yyyy-MM-dd HH:mm:ss";
 
     /**
      * * 【动态申请SD卡读写的权限】
@@ -73,10 +73,8 @@ public class Utils {
 
     public static long changeToTargetTime(int h, int m, int s) {
         String date1 = getDateToString();
-        String[] dates = date1.split(":");
-
-
-        String date = h + ":" + m + ":" + s;
+        String[] dates = date1.split(" ");
+        String date = dates[0] + " " + h + ":" + m + ":" + s;
         long timeMillis = getStringToDate(date);
         return timeMillis / 1000;
     }

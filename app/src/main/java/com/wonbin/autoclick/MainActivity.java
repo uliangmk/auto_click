@@ -12,6 +12,8 @@ import android.widget.EditText;
 import android.widget.RadioGroup;
 import android.widget.TextView;
 
+import java.util.Date;
+
 
 public class MainActivity extends AppCompatActivity implements View.OnClickListener {
     private Button mStart, mStop;
@@ -86,16 +88,12 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private long getTimeSecond() {
-
-
-
         long result = 0L;
         int timeH = getEditInt(mIntervalH);
         int timeM = getEditInt(mIntervalM);
         int timeS = getEditInt(mIntervalS);
-        long currentTime = Utils.getStringToDate(Utils.getDateToString());
+        long currentTime = new Date().getTime() / 1000;
         long targetTime = Utils.changeToTargetTime(timeH, timeM, timeS);
-        Log.i("ulog", "currentTime -- " + currentTime + "  targetTime --  " + targetTime);
         result = targetTime - currentTime;
         return result;
     }
