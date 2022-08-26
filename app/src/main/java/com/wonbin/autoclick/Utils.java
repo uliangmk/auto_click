@@ -12,7 +12,8 @@ import java.util.Date;
  * @description：
  */
 public class Utils {
-
+    private static String MODEL_LOG = "MM-dd HH:mm:ss";
+    private static String MODEL_DATE = "HH:mm:ss";
 
     /**
      * * 【动态申请SD卡读写的权限】
@@ -35,15 +36,49 @@ public class Utils {
     }
 
 
-    public static String getDateToString() {
+    public static String getLogDateToString() {
         try {
             long milSecond = System.currentTimeMillis();
             Date date = new Date(milSecond);
-            SimpleDateFormat format = new SimpleDateFormat("MM-dd HH:mm:ss");
+            SimpleDateFormat format = new SimpleDateFormat(MODEL_LOG);
             return "[" + format.format(date) + "]";
         } catch (Exception e) {
             return "[error time]";
         }
+    }
+
+
+    public static String getDateToString() {
+        try {
+            long milSecond = System.currentTimeMillis();
+            Date date = new Date(milSecond);
+            SimpleDateFormat format = new SimpleDateFormat(MODEL_DATE);
+            return format.format(date);
+        } catch (Exception e) {
+            return "";
+        }
+    }
+
+
+    public static long getStringToDate(String dateString) {
+        SimpleDateFormat dateFormat = new SimpleDateFormat(MODEL_DATE);
+        Date date = new Date();
+        try {
+            date = dateFormat.parse(dateString);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return date.getTime();
+    }
+
+    public static long changeToTargetTime(int h, int m, int s) {
+        String date1 = getDateToString();
+        String[] dates = date1.split(":");
+
+
+        String date = h + ":" + m + ":" + s;
+        long timeMillis = getStringToDate(date);
+        return timeMillis / 1000;
     }
 
 }

@@ -3,14 +3,12 @@ package com.wonbin.autoclick;
 import android.accessibilityservice.AccessibilityService;
 import android.accessibilityservice.GestureDescription;
 import android.annotation.SuppressLint;
-import android.app.admin.DevicePolicyManager;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Path;
 import android.os.CountDownTimer;
 import android.os.PowerManager;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
@@ -66,7 +64,7 @@ public class AutoService extends AccessibilityService {
         }
         switch (action) {
             case SHOW:
-                LogManager.getInstance().saveLogTxt("\r\nstart:"  + Utils.getDateToString());
+                LogManager.getInstance().saveLogTxt("\r\nstart:"  + Utils.getLogDateToString());
                 mInterval = intent.getLongExtra(INTERVAL, 16) * 1000;
                 tX = intent.getIntExtra(T_X, 0);
                 tY = intent.getIntExtra(T_Y, 0);
@@ -82,14 +80,14 @@ public class AutoService extends AccessibilityService {
                     mFloatingView.updatePosition();
                     workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
                 }
-                LogManager.getInstance().saveLogTxt("首次任务：当前任务数" + workQueue.size() + Utils.getDateToString());
+                LogManager.getInstance().saveLogTxt("首次任务：当前任务数" + workQueue.size() + Utils.getLogDateToString());
                 startClickJob();
                 break;
             case ADD:
                 mFloatingView.updatePosition();
                 workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
                 Toast.makeText(getBaseContext(), "当前任务数：" + workQueue.size(), Toast.LENGTH_SHORT).show();
-                LogManager.getInstance().saveLogTxt("添加任务：当前任务数" + workQueue.size() + Utils.getDateToString());
+                LogManager.getInstance().saveLogTxt("添加任务：当前任务数" + workQueue.size() + Utils.getLogDateToString());
                 break;
             case STOP:
                 stopAutoService();
@@ -99,14 +97,14 @@ public class AutoService extends AccessibilityService {
     }
 
     private void stopAutoService() {
-        LogManager.getInstance().saveLogTxt("关闭服务" + Utils.getDateToString());
+        LogManager.getInstance().saveLogTxt("关闭服务" + Utils.getLogDateToString());
         closeTimer();
         Toast.makeText(getBaseContext(), "关闭服务", Toast.LENGTH_SHORT).show();
         disableSelf();
     }
 
     private void startClickJob() {
-        LogManager.getInstance().logMsg("准备开始:" + Utils.getDateToString());
+        LogManager.getInstance().logMsg("准备开始:" + Utils.getLogDateToString());
         if (workQueue == null) {
             needOpenPower(false);
             return;
@@ -116,7 +114,7 @@ public class AutoService extends AccessibilityService {
             needOpenPower(false);
             return;
         }
-        LogManager.getInstance().logMsg("有任务开启定时:" + Utils.getDateToString());
+        LogManager.getInstance().logMsg("有任务开启定时:" + Utils.getLogDateToString());
         mFloatingView.setFloatPosition(currentPosition);
         closeTimer();
         timer = new CountDownTimer(mInterval, tipsInterval) {
@@ -127,7 +125,7 @@ public class AutoService extends AccessibilityService {
 
             @Override
             public void onFinish() {
-                LogManager.getInstance().logMsg("定时结束真正点击:" + Utils.getDateToString());
+                LogManager.getInstance().logMsg("定时结束真正点击:" + Utils.getLogDateToString());
                 if (SWIPE.equals(mMode)) {
                     playSwipe();
                 } else {
@@ -150,7 +148,7 @@ public class AutoService extends AccessibilityService {
             //必须减1像素不然点击到了自己window
             int x = mFloatingView.mX - 1;
             int y = mFloatingView.mY - 1;
-            LogManager.getInstance().saveLogTxt("点击位置 " + x + " " + y + "  " + Utils.getDateToString());
+            LogManager.getInstance().saveLogTxt("点击位置 " + x + " " + y + "  " + Utils.getLogDateToString());
             Path path = new Path();
             path.moveTo(x, y);
             path.lineTo(x, y);
@@ -161,18 +159,18 @@ public class AutoService extends AccessibilityService {
                 @Override
                 public void onCompleted(GestureDescription gestureDescription) {
                     super.onCompleted(gestureDescription);
-                    LogManager.getInstance().saveLogTxt("点击完成" + "  " + Utils.getDateToString());
+                    LogManager.getInstance().saveLogTxt("点击完成" + "  " + Utils.getLogDateToString());
                     startClickJob();
                 }
 
                 @Override
                 public void onCancelled(GestureDescription gestureDescription) {
-                    LogManager.getInstance().saveLogTxt("中断点击" + "  " + Utils.getDateToString());
+                    LogManager.getInstance().saveLogTxt("中断点击" + "  " + Utils.getLogDateToString());
                     super.onCancelled(gestureDescription);
                 }
             }, null);
         } catch (Exception e) {
-            LogManager.getInstance().saveLogTxt("异常，位置不对 " + "  " + Utils.getDateToString());
+            LogManager.getInstance().saveLogTxt("异常，位置不对 " + "  " + Utils.getLogDateToString());
         }
     }
 
@@ -194,18 +192,18 @@ public class AutoService extends AccessibilityService {
                 @Override
                 public void onCompleted(GestureDescription gestureDescription) {
                     super.onCompleted(gestureDescription);
-                    LogManager.getInstance().saveLogTxt("滑动完成" + "  " + Utils.getDateToString());
+                    LogManager.getInstance().saveLogTxt("滑动完成" + "  " + Utils.getLogDateToString());
                     startClickJob();
                 }
 
                 @Override
                 public void onCancelled(GestureDescription gestureDescription) {
                     super.onCancelled(gestureDescription);
-                    LogManager.getInstance().saveLogTxt("中断滑动" + "  " + Utils.getDateToString());
+                    LogManager.getInstance().saveLogTxt("中断滑动" + "  " + Utils.getLogDateToString());
                 }
             }, null);
         } catch (Exception e) {
-            LogManager.getInstance().saveLogTxt("异常，滑动位置不对 " + "  " + Utils.getDateToString());
+            LogManager.getInstance().saveLogTxt("异常，滑动位置不对 " + "  " + Utils.getLogDateToString());
         }
     }
 
@@ -220,14 +218,14 @@ public class AutoService extends AccessibilityService {
     }
 
     private void dealNotificationChange(AccessibilityEvent event) {
-        LogManager.getInstance().saveLogTxt("收到微信" + "  " + Utils.getDateToString());
+        LogManager.getInstance().saveLogTxt("收到微信" + "  " + Utils.getLogDateToString());
         List<CharSequence> texts = event.getText();
         if (!texts.isEmpty()) {
             for (CharSequence text : texts) {
                 String content = text.toString();
                 //通知栏包括威信红包文字
                 if (content.contains("elazipa") && content.contains("开")) {
-                    LogManager.getInstance().saveLogTxt("微信命中" + "  " + Utils.getDateToString());
+                    LogManager.getInstance().saveLogTxt("微信命中" + "  " + Utils.getLogDateToString());
                     needOpenPower(true);
                     dealPositionChange(content);
                     mInterval = NOTICE_INTERVAL;
@@ -260,9 +258,9 @@ public class AutoService extends AccessibilityService {
             WorkPosition currentPosition = new WorkPosition(rx, ry);
             mFloatingView.setFloatPosition(currentPosition);
             workQueue.offer(new WorkPosition(rx, ry));
-            LogManager.getInstance().saveLogTxt("微信位置" + rx + "  " + ry + Utils.getDateToString());
+            LogManager.getInstance().saveLogTxt("微信位置" + rx + "  " + ry + Utils.getLogDateToString());
         } catch (Exception e) {
-            LogManager.getInstance().saveLogTxt("异常，配置坐标不对" + Utils.getDateToString());
+            LogManager.getInstance().saveLogTxt("异常，配置坐标不对" + Utils.getLogDateToString());
         }
     }
 

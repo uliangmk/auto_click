@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -85,19 +86,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private long getTimeSecond() {
+
+
+
         long result = 0L;
         int timeH = getEditInt(mIntervalH);
         int timeM = getEditInt(mIntervalM);
         int timeS = getEditInt(mIntervalS);
-        if (timeH != 0) {
-            result = timeH * 60 * 60;
-        }
-        if (timeM != 0) {
-            result = result + timeM * 60;
-        }
-        if (timeH == 0 && timeM == 0) {
-            result = timeS;
-        }
+        long currentTime = Utils.getStringToDate(Utils.getDateToString());
+        long targetTime = Utils.changeToTargetTime(timeH, timeM, timeS);
+        Log.i("ulog", "currentTime -- " + currentTime + "  targetTime --  " + targetTime);
+        result = targetTime - currentTime;
         return result;
     }
 
