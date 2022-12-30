@@ -18,7 +18,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class AutoService extends AccessibilityService {
-
     public static final String ACTION = "action";
     public static final String SHOW = "show";
     public static final String STOP = "STOP_SERVICE";
@@ -32,7 +31,6 @@ public class AutoService extends AccessibilityService {
 
     public static final String T_X = "T_X";
     public static final String T_Y = "T_Y";
-
     public static final String INTERVAL = "interval";
 
     private FloatingView mFloatingView;
@@ -47,7 +45,8 @@ public class AutoService extends AccessibilityService {
     public static final String ADD_WORK = "添加任务：";
     public static final String PRE_WORK = "开启任务：";
     public static final String REAL_WORK = "执行任务：";
-    public static final String ERROR = "异常：";
+    public static final String NEW_MSG = "收到微信：";
+    public static final String ERROR = "--异常：";
 
     @Override
     public void onCreate() {
@@ -137,7 +136,7 @@ public class AutoService extends AccessibilityService {
         }
         mFloatingView.setFloatPosition(currentData);
         closeTimer();
-        LogManager.getInstance().logMsg(PRE_WORK + "定时启动 剩余（" + currentData.interval + "）秒" + Utils.getLogDateToString());
+        LogManager.getInstance().logMsg(PRE_WORK + "定时启动 剩余（" + currentData.interval + "）毫秒" + Utils.getLogDateToString());
         timer = new CountDownTimer(currentData.interval, tipsInterval) {
             @Override
             public void onTick(long millisUntilFinished) {
@@ -244,14 +243,14 @@ public class AutoService extends AccessibilityService {
     }
 
     private void dealNotificationChange(AccessibilityEvent event) {
-        LogManager.getInstance().logMsg("收到微信" + "  " + Utils.getLogDateToString());
+        LogManager.getInstance().logMsg(NEW_MSG + "  " + Utils.getLogDateToString());
         List<CharSequence> texts = event.getText();
         if (!texts.isEmpty()) {
             for (CharSequence text : texts) {
                 String content = text.toString();
                 //通知栏包括威信红包文字
                 if (content.contains("elazipa") && content.contains("点击") || content.contains("滑动")) {
-                    LogManager.getInstance().logMsg("微信命中" + "  " + Utils.getLogDateToString());
+                    LogManager.getInstance().logMsg(NEW_MSG + "消息命中" + "  " + Utils.getLogDateToString());
                     WorkPositionData data = convertStringToData(content);
                     addTask(data);
                     if (!isTimerWorking) {
@@ -267,25 +266,27 @@ public class AutoService extends AccessibilityService {
         WorkPositionData data = new WorkPositionData();
         try {
             if (!TextUtils.isEmpty(content)) {
+                int screenWidth = mFloatingView.getScreenWidth();
+                int screenHeight = mFloatingView.getScreenHeight();
                 if (content.contains("滑动")) {
-                    int screenWidth = mFloatingView.getScreenWidth();
-                    int screenHeight = mFloatingView.getScreenHeight();
                     data.mode = SWIPE;
-                    data.interval = 3 * 1000;
+                    data.interval = 5 * 1000;
                     data.toX = 0;
                     data.toY = screenHeight / 4;
                     data.workX = screenWidth / 2;
                     data.workY = screenHeight / 2;
                 } else {
-                    int screenWidth = mFloatingView.getScreenWidth();
-                    int screenHeight = mFloatingView.getScreenHeight();
                     data.mode = CLICK;
-                    data.interval = 3 * 1000;
+                    data.interval = 15 * 1000;
                     data.workX = screenWidth / 2;
                     String[] result = content.split("_");
                     if (result != null && result.length >= 2) {
                         int y = Integer.parseInt(result[1]);
                         data.workY = screenHeight * y / 100;
+                    }
+                    if (result != null && result.length >= 3) {
+                        int x = Integer.parseInt(result[2]);
+                        data.workX = screenWidth * x / 100;
                     }
                 }
             }
