@@ -19,7 +19,6 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class AutoService extends AccessibilityService {
 
-    public static final long NOTICE_INTERVAL = 40 * 1000;
     public static final String ACTION = "action";
     public static final String SHOW = "show";
     public static final String STOP = "STOP_SERVICE";
@@ -37,13 +36,10 @@ public class AutoService extends AccessibilityService {
     public static final String INTERVAL = "interval";
 
     private FloatingView mFloatingView;
-    private long mInterval;
     private int tipsInterval = 3 * 1000;
-    private int tX;
-    private int tY;
-    private String mMode;
+    private WorkPositionData cacheData = new WorkPositionData();
     private CountDownTimer timer;
-    private Queue<WorkPosition> workQueue = new LinkedBlockingQueue<>();
+    private Queue<WorkPositionData> workQueue = new LinkedBlockingQueue<>();
     private PowerManager.WakeLock wl;
 
     public static final String START = "预备状态:小窗显示";
@@ -71,10 +67,11 @@ public class AutoService extends AccessibilityService {
         switch (action) {
             case SHOW:
                 LogManager.getInstance().logMsg("\r\n" + START + Utils.getLogDateToString());
-                mInterval = intent.getLongExtra(INTERVAL, 16) * 1000;
-                tX = intent.getIntExtra(T_X, 0);
-                tY = intent.getIntExtra(T_Y, 0);
-                mMode = intent.getStringExtra(MODE);
+                cacheData = new WorkPositionData();
+                cacheData.interval = intent.getLongExtra(INTERVAL, 16) * 1000;
+                cacheData.toX = intent.getIntExtra(T_X, 0);
+                cacheData.toY = intent.getIntExtra(T_Y, 0);
+                cacheData.mode = intent.getStringExtra(MODE);
                 mFloatingView.show();
                 break;
             case HIDE:
@@ -84,22 +81,35 @@ public class AutoService extends AccessibilityService {
             case PLAY:
                 if (workQueue.size() == 0) {
                     mFloatingView.updatePosition();
-                    workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
+                    WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
+                    data.mode = cacheData.mode;
+                    data.interval = cacheData.interval;
+                    data.toX = cacheData.toX;
+                    data.toY = cacheData.toY;
+                    addTask(data);
                 }
                 LogManager.getInstance().logMsg(PRE_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
-                startClickJob();
+                startJob();
                 break;
             case ADD:
                 mFloatingView.updatePosition();
-                workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
-                Toast.makeText(getBaseContext(), "当前任务数：" + workQueue.size(), Toast.LENGTH_SHORT).show();
-                LogManager.getInstance().logMsg(ADD_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
+                WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
+                addTask(data);
                 break;
             case STOP:
                 stopAutoService();
                 break;
         }
         return super.onStartCommand(intent, flags, startId);
+    }
+
+    private void addTask(WorkPositionData workPositionData) {
+        if (workPositionData == null) {
+            return;
+        }
+        workQueue.offer(workPositionData);
+        Toast.makeText(getBaseContext(), "当前任务数：" + workQueue.size(), Toast.LENGTH_SHORT).show();
+        LogManager.getInstance().logMsg(ADD_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
     }
 
     private void stopAutoService() {
@@ -109,22 +119,26 @@ public class AutoService extends AccessibilityService {
         disableSelf();
     }
 
-    private void startClickJob() {
+    private boolean isTimerWorking = false;
+
+    private void startJob() {
         if (workQueue == null) {
+            isTimerWorking = false;
             needOpenPower(false);
-            LogManager.getInstance().logMsg(PRE_WORK + "队列为空返回" + Utils.getLogDateToString());
+            LogManager.getInstance().logMsg(PRE_WORK + "队列为空 返回" + Utils.getLogDateToString());
             return;
         }
-        WorkPosition currentPosition = workQueue.poll();
-        if (currentPosition == null) {
+        final WorkPositionData currentData = workQueue.poll();
+        if (currentData == null) {
+            isTimerWorking = false;
             needOpenPower(false);
-            LogManager.getInstance().logMsg(PRE_WORK + "点击位置异常返回" + Utils.getLogDateToString());
+            LogManager.getInstance().logMsg(PRE_WORK + "点击位置为空 返回" + Utils.getLogDateToString());
             return;
         }
-        mFloatingView.setFloatPosition(currentPosition);
+        mFloatingView.setFloatPosition(currentData);
         closeTimer();
-        LogManager.getInstance().logMsg(PRE_WORK + "定时启动 剩余（" + mInterval + "）秒" + Utils.getLogDateToString());
-        timer = new CountDownTimer(mInterval, tipsInterval) {
+        LogManager.getInstance().logMsg(PRE_WORK + "定时启动 剩余（" + currentData.interval + "）秒" + Utils.getLogDateToString());
+        timer = new CountDownTimer(currentData.interval, tipsInterval) {
             @Override
             public void onTick(long millisUntilFinished) {
                 Toast.makeText(getBaseContext(), "还有" + millisUntilFinished / 1000 + "秒", Toast.LENGTH_SHORT).show();
@@ -132,14 +146,15 @@ public class AutoService extends AccessibilityService {
 
             @Override
             public void onFinish() {
-                LogManager.getInstance().logMsg(PRE_WORK + "定时结束真正执行类型" + mMode + Utils.getLogDateToString());
-                if (SWIPE.equals(mMode)) {
-                    playSwipe();
+                LogManager.getInstance().logMsg(PRE_WORK + "定时结束真正执行类型" + currentData.mode + Utils.getLogDateToString());
+                if (SWIPE.equals(currentData.mode)) {
+                    playSwipe(currentData);
                 } else {
-                    playTap();
+                    playClick(currentData);
                 }
             }
         }.start();
+        isTimerWorking = true;
     }
 
     private void closeTimer() {
@@ -149,7 +164,7 @@ public class AutoService extends AccessibilityService {
         timer.cancel();
     }
 
-    private void playTap() {
+    private void playClick(WorkPositionData currentData) {
         try {
             mFloatingView.updatePosition();
             //必须减1像素不然点击到了自己window
@@ -167,7 +182,7 @@ public class AutoService extends AccessibilityService {
                 public void onCompleted(GestureDescription gestureDescription) {
                     super.onCompleted(gestureDescription);
                     LogManager.getInstance().logMsg(REAL_WORK + "点击完成" + "  " + Utils.getLogDateToString());
-                    startClickJob();
+                    startJob();
                 }
 
                 @Override
@@ -181,13 +196,13 @@ public class AutoService extends AccessibilityService {
         }
     }
 
-    private void playSwipe() {
+    private void playSwipe(WorkPositionData currentData) {
         try {
             mFloatingView.updatePosition();
             int fromX = mFloatingView.mX - 1;
             int fromY = mFloatingView.mY - 1;
-            int toX = mFloatingView.mX - tX - 1;
-            int toY = mFloatingView.mY - tY - 1;
+            int toX = mFloatingView.mX - currentData.toX - 1;
+            int toY = mFloatingView.mY + currentData.toY;
             LogManager.getInstance().logMsg(REAL_WORK + "滑动位置 " + fromX + " " + fromY + " 到 " + toX + " " + toY + " " + Utils.getLogDateToString());
             Path path = new Path();
             path.moveTo(fromX, fromY);
@@ -200,7 +215,7 @@ public class AutoService extends AccessibilityService {
                 public void onCompleted(GestureDescription gestureDescription) {
                     super.onCompleted(gestureDescription);
                     LogManager.getInstance().logMsg(REAL_WORK + "滑动完成" + "  " + Utils.getLogDateToString());
-                    startClickJob();
+                    startJob();
                 }
 
                 @Override
@@ -214,11 +229,15 @@ public class AutoService extends AccessibilityService {
         }
     }
 
+
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
         int eventType = event.getEventType();
         switch (eventType) {
-            case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED:
+            case AccessibilityEvent.TYPE_NOTIFICATION_STATE_CHANGED://com.tencent.mm
+                if (!TextUtils.equals("com.tencent.mm", event.getPackageName())) {
+                    return;
+                }
                 dealNotificationChange(event);
                 break;
         }
@@ -231,44 +250,49 @@ public class AutoService extends AccessibilityService {
             for (CharSequence text : texts) {
                 String content = text.toString();
                 //通知栏包括威信红包文字
-                if (content.contains("elazipa") && content.contains("开")) {
+                if (content.contains("elazipa") && content.contains("点击") || content.contains("滑动")) {
                     LogManager.getInstance().logMsg("微信命中" + "  " + Utils.getLogDateToString());
-                    needOpenPower(true);
-                    dealPositionChange(content);
-                    mInterval = NOTICE_INTERVAL;
-                    tipsInterval = 1000;
-                    if (workQueue.size() == 0) {
-                        mFloatingView.updatePosition();
-                        workQueue.offer(new WorkPosition(mFloatingView.mX, mFloatingView.mY));
+                    WorkPositionData data = convertStringToData(content);
+                    addTask(data);
+                    if (!isTimerWorking) {
+                        startJob();
                     }
-                    startClickJob();
                 }
             }
         }
     }
 
-    private void dealPositionChange(String content) {
+    //模版  滑动_    点击_70
+    private WorkPositionData convertStringToData(String content) {
+        WorkPositionData data = new WorkPositionData();
         try {
-            int indexX = content.indexOf("%");
-            String sx = content.substring(indexX + 1, indexX + 3);
-            int x = Integer.parseInt(sx);
-            String left = content.substring(indexX + 1);
-            int indexY = left.indexOf("%");
-            String sy = left.substring(indexY + 1, indexY + 3);
-            int y = Integer.parseInt(sy);
-
-            int screenWidth = mFloatingView.getScreenWidth();
-            int screenHeight = mFloatingView.getScreenHeight();
-            int rx = screenWidth * x / 100;
-            int ry = screenHeight * y / 100;
-
-            WorkPosition currentPosition = new WorkPosition(rx, ry);
-            mFloatingView.setFloatPosition(currentPosition);
-            workQueue.offer(new WorkPosition(rx, ry));
-            LogManager.getInstance().logMsg("微信位置" + rx + "  " + ry + Utils.getLogDateToString());
+            if (!TextUtils.isEmpty(content)) {
+                if (content.contains("滑动")) {
+                    int screenWidth = mFloatingView.getScreenWidth();
+                    int screenHeight = mFloatingView.getScreenHeight();
+                    data.mode = SWIPE;
+                    data.interval = 3 * 1000;
+                    data.toX = 0;
+                    data.toY = screenHeight / 4;
+                    data.workX = screenWidth / 2;
+                    data.workY = screenHeight / 2;
+                } else {
+                    int screenWidth = mFloatingView.getScreenWidth();
+                    int screenHeight = mFloatingView.getScreenHeight();
+                    data.mode = CLICK;
+                    data.interval = 3 * 1000;
+                    data.workX = screenWidth / 2;
+                    String[] result = content.split("_");
+                    if (result != null && result.length >= 2) {
+                        int y = Integer.parseInt(result[1]);
+                        data.workY = screenHeight * y / 100;
+                    }
+                }
+            }
         } catch (Exception e) {
-            LogManager.getInstance().logMsg("异常，配置坐标不对" + Utils.getLogDateToString());
+            LogManager.getInstance().logMsg(ERROR + "微信数据转换异常 " + "  " + Utils.getLogDateToString());
         }
+        return data;
     }
 
     /**
@@ -298,13 +322,20 @@ public class AutoService extends AccessibilityService {
 
     }
 
-    public class WorkPosition {
-        public int workX;
-        public int workY;
+    public class WorkPositionData {
+        public int workX;//点击x
+        public int workY;//点击y
+        public int toX;//滑动到x
+        public int toY;//滑动到y
+        public String mode = CLICK;//点击还是滑动  CLICK SWIPE
+        private long interval;//延时毫秒
 
-        public WorkPosition(int x, int y) {
+        public WorkPositionData(int x, int y) {
             workX = x;
             workY = y;
+        }
+
+        public WorkPositionData() {
         }
     }
 
