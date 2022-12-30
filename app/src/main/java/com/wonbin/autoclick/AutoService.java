@@ -94,6 +94,7 @@ public class AutoService extends AccessibilityService {
                 mFloatingView.updatePosition();
                 WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
                 addTask(data);
+                toastPositionMsg(data);
                 break;
             case STOP:
                 stopAutoService();
@@ -102,12 +103,26 @@ public class AutoService extends AccessibilityService {
         return super.onStartCommand(intent, flags, startId);
     }
 
+    //提示当前位置占屏幕百分比
+    private void toastPositionMsg(WorkPositionData data) {
+        try {
+            if (data == null) {
+                return;
+            }
+            int screenWidth = mFloatingView.getScreenWidth();
+            int screenHeight = mFloatingView.getScreenHeight();
+            float x = (float) data.workX / (float) screenWidth;
+            float Y = (float) data.workY / (float) screenHeight;
+            Toast.makeText(getBaseContext(), "点位 X= " + x + " Y= " + Y, Toast.LENGTH_SHORT).show();
+        } catch (Exception e) {
+        }
+    }
+
     private void addTask(WorkPositionData workPositionData) {
         if (workPositionData == null) {
             return;
         }
         workQueue.offer(workPositionData);
-        Toast.makeText(getBaseContext(), "当前任务数：" + workQueue.size(), Toast.LENGTH_SHORT).show();
         LogManager.getInstance().logMsg(ADD_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
     }
 
