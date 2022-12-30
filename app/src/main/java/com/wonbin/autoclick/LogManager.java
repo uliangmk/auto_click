@@ -27,6 +27,8 @@ public class LogManager {
     private static LogManager INSTANCE;
     private ExecutorService singleThreadExecutor;
     public static final String ADDRESS_FILE = "auto_click_log.txt";
+    private File appDir;
+    private File addressTxt;
 
     public static LogManager getInstance() {
         if (INSTANCE == null) {
@@ -53,39 +55,34 @@ public class LogManager {
             return false;
         }
         queue.offer(msg);
-        singleThreadExecutor.execute(new Runnable() {
-            @Override
-            public void run() {
-                if (queue == null) {
-                    return;
-                }
-                String msg = queue.poll();
-                if (TextUtils.isEmpty(msg)) {
-                    return;
-                }
-                saveLogTxt(msg);
-            }
-        });
+        savaLogOnThread();
         return true;
     }
 
-
-    private File appDir;
-    private File addressTxt;
-
-    public void saveLogTxt(String msg) {
-        try {
-            if (!addressTxt.exists()) {
-                addressTxt.createNewFile();
-            }
-            FileWriter fw = new FileWriter(addressTxt, true);
-            fw.write(msg + "\r\n");
-            fw.close();
-        } catch (Exception e) {
-            e.printStackTrace();
-            Log.e("ulog", " 写文件-- Exception" + " ");
+    private void savaLogOnThread() {
+        if (queue == null || queue.isEmpty()) {
+            return;
         }
+        singleThreadExecutor.execute(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (queue == null) {
+                        return;
+                    }
+                    String msg = queue.poll();
+                    if (TextUtils.isEmpty(msg)) {
+                        return;
+                    }
+                    if (!addressTxt.exists()) {
+                        addressTxt.createNewFile();
+                    }
+                    FileWriter fw = new FileWriter(addressTxt, true);
+                    fw.write(msg + "\r\n");
+                    fw.close();
+                } catch (Exception e) {
+                }
+            }
+        });
     }
-
-
 }

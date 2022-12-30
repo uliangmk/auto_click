@@ -5,7 +5,6 @@ import android.os.Bundle;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.text.TextUtils;
-import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -67,7 +66,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 intent.putExtra(AutoService.T_X, getEditInt(swipeX));
                 intent.putExtra(AutoService.T_Y, getEditInt(swipeY));
                 int id = mCheckMode.getCheckedRadioButtonId();
-                intent.putExtra(AutoService.MODE, id == R.id.swipe ? AutoService.SWIPE : AutoService.TAP);
+                intent.putExtra(AutoService.MODE, id == R.id.swipe ? AutoService.SWIPE : AutoService.CLICK);
                 startService(intent);
                 finish();
                 break;
