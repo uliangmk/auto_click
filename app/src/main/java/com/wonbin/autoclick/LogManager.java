@@ -40,7 +40,7 @@ public class LogManager {
         return INSTANCE;
     }
 
-    public LogManager() {
+    private LogManager() {
         appDir = Environment.getExternalStorageDirectory();
         addressTxt = new File(appDir, ADDRESS_FILE);
         singleThreadExecutor = Executors.newSingleThreadExecutor();
