@@ -112,8 +112,8 @@ public class AutoService extends AccessibilityService {
             int screenWidth = mFloatingView.getScreenWidth();
             int screenHeight = mFloatingView.getScreenHeight();
             float x = (float) data.workX / (float) screenWidth;
-            float Y = (float) data.workY / (float) screenHeight;
-            Toast.makeText(getBaseContext(), "点位 X= " + x + " Y= " + Y, Toast.LENGTH_SHORT).show();
+            float y = (float) data.workY / (float) screenHeight;
+            Toast.makeText(getBaseContext(), "Y=  " + y + "  X=  " + x, Toast.LENGTH_SHORT).show();
         } catch (Exception e) {
         }
     }
@@ -269,20 +269,16 @@ public class AutoService extends AccessibilityService {
                     needOpenPower(true);
                     WorkPositionData data = convertStringToData(content);
                     addTask(data);
-                    mFloatingView.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            if (!isTimerWorking) {
-                                startJob();
-                            }
-                        }
-                    }, 1000);
+                    if (!isTimerWorking) {
+                        startJob();
+                    }
+
                 }
             }
         }
     }
 
-    //模版  滑动_    点击_70
+    //模版  滑动_    点击_70_10 (先y后x x可没有默认50 点击_70)
     private WorkPositionData convertStringToData(String content) {
         WorkPositionData data = new WorkPositionData();
         try {
