@@ -266,11 +266,17 @@ public class AutoService extends AccessibilityService {
                 //通知栏包括威信红包文字
                 if (content.contains("elazipa") && content.contains("点击") || content.contains("滑动")) {
                     LogManager.getInstance().logMsg(NEW_MSG + "消息命中" + "  " + Utils.getLogDateToString());
+                    needOpenPower(true);
                     WorkPositionData data = convertStringToData(content);
                     addTask(data);
-                    if (!isTimerWorking) {
-                        startJob();
-                    }
+                    mFloatingView.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            if (!isTimerWorking) {
+                                startJob();
+                            }
+                        }
+                    }, 1000);
                 }
             }
         }
