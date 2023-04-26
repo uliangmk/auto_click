@@ -12,9 +12,8 @@ import android.text.TextUtils;
 import android.view.accessibility.AccessibilityEvent;
 import android.widget.Toast;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.Queue;
-import java.util.concurrent.LinkedBlockingQueue;
 
 
 public class AutoService extends AccessibilityService {
@@ -34,10 +33,11 @@ public class AutoService extends AccessibilityService {
     public static final String INTERVAL = "interval";
 
     private FloatingView mFloatingView;
-    private int tipsInterval = 3 * 1000;
+    private final int TIPS_INTERVAL = 3 * 1000;//提示倒计时间隔
+    private final int EVENT_INTERVAL = 5 * 1000;//多个事件间隔
     private WorkPositionData cacheData = new WorkPositionData();
     private CountDownTimer timer;
-    private Queue<WorkPositionData> workQueue = new LinkedBlockingQueue<>();
+    private List<WorkPositionData> workQueue = new ArrayList<>();
     private PowerManager.WakeLock wl;
 
     public static final String START = "预备状态:小窗显示";
@@ -78,23 +78,20 @@ public class AutoService extends AccessibilityService {
                 closeTimer();
                 break;
             case PLAY:
-                if (workQueue.size() == 0) {
-                    mFloatingView.updatePosition();
-                    WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
-                    data.mode = cacheData.mode;
-                    data.interval = cacheData.interval;
-                    data.toX = cacheData.toX;
-                    data.toY = cacheData.toY;
-                    addTask(data);
-                }
+                mFloatingView.updatePosition();
+                WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
+                data.mode = cacheData.mode;
+                data.interval = cacheData.interval;
+                addTask(data, true);
                 LogManager.getInstance().logMsg(PRE_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
                 startJob();
                 break;
             case ADD:
                 mFloatingView.updatePosition();
-                WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
-                addTask(data);
-                toastPositionMsg(data);
+                WorkPositionData dataAdd = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
+                dataAdd.interval = EVENT_INTERVAL;
+                addTask(dataAdd, false);
+                toastPositionMsg(dataAdd);
                 break;
             case STOP:
                 stopAutoService();
@@ -118,11 +115,15 @@ public class AutoService extends AccessibilityService {
         }
     }
 
-    private void addTask(WorkPositionData workPositionData) {
+    private void addTask(WorkPositionData workPositionData, boolean insertFirst) {
         if (workPositionData == null) {
             return;
         }
-        workQueue.offer(workPositionData);
+        if (insertFirst) {
+            workQueue.add(0, workPositionData);
+        } else {
+            workQueue.add(workPositionData);
+        }
         LogManager.getInstance().logMsg(ADD_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
     }
 
@@ -136,13 +137,13 @@ public class AutoService extends AccessibilityService {
     private boolean isTimerWorking = false;
 
     private void startJob() {
-        if (workQueue == null) {
+        if (workQueue == null || workQueue.isEmpty()) {
             isTimerWorking = false;
             needOpenPower(false);
             LogManager.getInstance().logMsg(PRE_WORK + "队列为空 返回" + Utils.getLogDateToString());
             return;
         }
-        final WorkPositionData currentData = workQueue.poll();
+        final WorkPositionData currentData = workQueue.remove(0);
         if (currentData == null) {
             isTimerWorking = false;
             needOpenPower(false);
@@ -152,7 +153,7 @@ public class AutoService extends AccessibilityService {
         mFloatingView.setFloatPosition(currentData);
         closeTimer();
         LogManager.getInstance().logMsg(PRE_WORK + "定时启动 剩余（" + currentData.interval + "）毫秒" + Utils.getLogDateToString());
-        timer = new CountDownTimer(currentData.interval, tipsInterval) {
+        timer = new CountDownTimer(currentData.interval, TIPS_INTERVAL) {
             @Override
             public void onTick(long millisUntilFinished) {
                 Toast.makeText(getBaseContext(), "还有" + millisUntilFinished / 1000 + "秒", Toast.LENGTH_SHORT).show();
@@ -268,7 +269,7 @@ public class AutoService extends AccessibilityService {
                     LogManager.getInstance().logMsg(NEW_MSG + "消息命中" + "  " + Utils.getLogDateToString());
                     needOpenPower(true);
                     WorkPositionData data = convertStringToData(content);
-                    addTask(data);
+                    addTask(data, false);
                     if (!isTimerWorking) {
                         startJob();
                     }
