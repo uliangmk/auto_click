@@ -97,13 +97,13 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         Intent intent = new Intent(getContext(), AutoService.class);
         switch (view.getId()) {
             case R.id.play:
-                intent.putExtra(AutoService.ACTION, AutoService.PLAY);
+                intent.putExtra(AutoService.ACTION, AutoService.ACTION_PLAY);
                 break;
             case R.id.add:
-                intent.putExtra(AutoService.ACTION, AutoService.ADD);
+                intent.putExtra(AutoService.ACTION, AutoService.ACTION_ADD);
                 break;
             case R.id.close:
-                intent.putExtra(AutoService.ACTION, AutoService.HIDE);
+                intent.putExtra(AutoService.ACTION, AutoService.ACTION_HIDE);
                 Intent appMain = new Intent(getContext(), MainActivity.class);
                 getContext().startActivity(appMain);
                 break;
@@ -118,7 +118,7 @@ public class FloatingView extends FrameLayout implements View.OnClickListener {
         mY = location[1];
     }
 
-    public void setFloatPosition(AutoService.WorkPositionData position) {
+    public void setFloatPosition(WorkPositionData position) {
         mParams.x = position.workX;
         mParams.y = position.workY;
         mWindowManager.updateView(mView, mParams);

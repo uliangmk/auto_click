@@ -18,27 +18,22 @@ import java.util.List;
 
 public class AutoService extends AccessibilityService {
     public static final String ACTION = "action";
-    public static final String SHOW = "show";
-    public static final String STOP = "STOP_SERVICE";
-    public static final String HIDE = "hide";
-    public static final String PLAY = "play";
-    public static final String ADD = "ADD";
+    public static final String ACTION_SHOW = "SHOW";
+    public static final String ACTION_STOP = "STOP";
+    public static final String ACTION_HIDE = "HIDE";
+    public static final String ACTION_PLAY = "PLAY";
+    public static final String ACTION_ADD = "ADD";
 
     public static final String MODE = "mode";
-    public static final String CLICK = "click";
-    public static final String SWIPE = "swipe";
+    public static final String MODE_CLICK = "CLICK";
+    public static final String MODE_SWIPE = "SWIPE";
 
-    public static final String T_X = "T_X";
-    public static final String T_Y = "T_Y";
-    public static final String INTERVAL = "interval";
+    public static final String T_X = "T_X";//滑动模式-横向滑动距离
+    public static final String T_Y = "T_Y";//滑动模式-纵向滑动距离
+    public static final String INTERVAL = "interval";//倒计时剩余
 
-    private FloatingView mFloatingView;
     private final int TIPS_INTERVAL = 3 * 1000;//提示倒计时间隔
     private final int EVENT_INTERVAL = 5 * 1000;//多个事件间隔
-    private WorkPositionData cacheData = new WorkPositionData();
-    private CountDownTimer timer;
-    private List<WorkPositionData> workQueue = new ArrayList<>();
-    private PowerManager.WakeLock wl;
 
     public static final String START = "预备状态:小窗显示";
     public static final String END = "结束服务";
@@ -47,6 +42,13 @@ public class AutoService extends AccessibilityService {
     public static final String REAL_WORK = "执行任务：";
     public static final String NEW_MSG = "收到微信：";
     public static final String ERROR = "--异常：";
+
+    private FloatingView mFloatingView;
+    private WorkPositionData cacheData = new WorkPositionData();
+    private CountDownTimer timer;
+    private List<WorkPositionData> workQueue = new ArrayList<>();
+    private PowerManager.WakeLock wl;
+    private boolean isTimerWorking = false;
 
     @Override
     public void onCreate() {
@@ -57,14 +59,14 @@ public class AutoService extends AccessibilityService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         if (intent == null) {
-            return super.onStartCommand(intent, flags, startId);
+            return super.onStartCommand(null, flags, startId);
         }
         String action = intent.getStringExtra(ACTION);
         if (TextUtils.isEmpty(action)) {
             return super.onStartCommand(intent, flags, startId);
         }
         switch (action) {
-            case SHOW:
+            case ACTION_SHOW:
                 LogManager.getInstance().logMsg("\r\n" + START + Utils.getLogDateToString());
                 cacheData = new WorkPositionData();
                 cacheData.interval = intent.getLongExtra(INTERVAL, 16) * 1000;
@@ -73,11 +75,11 @@ public class AutoService extends AccessibilityService {
                 cacheData.mode = intent.getStringExtra(MODE);
                 mFloatingView.show();
                 break;
-            case HIDE:
+            case ACTION_HIDE:
                 mFloatingView.hide();
                 closeTimer();
                 break;
-            case PLAY:
+            case ACTION_PLAY:
                 mFloatingView.updatePosition();
                 WorkPositionData data = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
                 data.mode = cacheData.mode;
@@ -86,14 +88,14 @@ public class AutoService extends AccessibilityService {
                 LogManager.getInstance().logMsg(PRE_WORK + "当前任务数" + workQueue.size() + Utils.getLogDateToString());
                 startJob();
                 break;
-            case ADD:
+            case ACTION_ADD:
                 mFloatingView.updatePosition();
                 WorkPositionData dataAdd = new WorkPositionData(mFloatingView.mX, mFloatingView.mY);
                 dataAdd.interval = EVENT_INTERVAL;
                 addTask(dataAdd, false);
                 toastPositionMsg(dataAdd);
                 break;
-            case STOP:
+            case ACTION_STOP:
                 stopAutoService();
                 break;
         }
@@ -134,7 +136,6 @@ public class AutoService extends AccessibilityService {
         disableSelf();
     }
 
-    private boolean isTimerWorking = false;
 
     private void startJob() {
         if (workQueue == null || workQueue.isEmpty()) {
@@ -162,7 +163,7 @@ public class AutoService extends AccessibilityService {
             @Override
             public void onFinish() {
                 LogManager.getInstance().logMsg(PRE_WORK + "定时结束真正执行类型" + currentData.mode + Utils.getLogDateToString());
-                if (SWIPE.equals(currentData.mode)) {
+                if (MODE_SWIPE.equals(currentData.mode)) {
                     playSwipe(currentData);
                 } else {
                     playClick(currentData);
@@ -287,14 +288,14 @@ public class AutoService extends AccessibilityService {
                 int screenWidth = mFloatingView.getScreenWidth();
                 int screenHeight = mFloatingView.getScreenHeight();
                 if (content.contains("滑动")) {
-                    data.mode = SWIPE;
+                    data.mode = MODE_SWIPE;
                     data.interval = 5 * 1000;
                     data.toX = 0;
                     data.toY = screenHeight / 4;
                     data.workX = screenWidth / 2;
                     data.workY = screenHeight / 2;
                 } else {
-                    data.mode = CLICK;
+                    data.mode = MODE_CLICK;
                     data.interval = 15 * 1000;
                     data.workX = screenWidth / 2;
                     String[] result = content.split("_");
@@ -340,22 +341,4 @@ public class AutoService extends AccessibilityService {
     public void onInterrupt() {
 
     }
-
-    public class WorkPositionData {
-        public int workX;//点击x
-        public int workY;//点击y
-        public int toX;//滑动到x
-        public int toY;//滑动到y
-        public String mode = CLICK;//点击还是滑动  CLICK SWIPE
-        private long interval;//延时毫秒
-
-        public WorkPositionData(int x, int y) {
-            workX = x;
-            workY = y;
-        }
-
-        public WorkPositionData() {
-        }
-    }
-
 }

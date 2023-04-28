@@ -61,17 +61,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         Intent intent = new Intent(this, AutoService.class);
         switch (v.getId()) {
             case R.id.start:
-                intent.putExtra(AutoService.ACTION, AutoService.SHOW);
+                intent.putExtra(AutoService.ACTION, AutoService.ACTION_SHOW);
                 intent.putExtra(AutoService.INTERVAL, getTimeSecond());
                 intent.putExtra(AutoService.T_X, getEditInt(swipeX));
                 intent.putExtra(AutoService.T_Y, getEditInt(swipeY));
                 int id = mCheckMode.getCheckedRadioButtonId();
-                intent.putExtra(AutoService.MODE, id == R.id.swipe ? AutoService.SWIPE : AutoService.CLICK);
+                intent.putExtra(AutoService.MODE, id == R.id.swipe ? AutoService.MODE_SWIPE : AutoService.MODE_CLICK);
                 startService(intent);
                 finish();
                 break;
             case R.id.stop:
-                intent.putExtra(AutoService.ACTION, AutoService.STOP);
+                intent.putExtra(AutoService.ACTION, AutoService.ACTION_STOP);
                 startService(intent);
                 finish();
                 break;
